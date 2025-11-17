@@ -496,16 +496,27 @@ class GitHubNotionSync:
             "text": {"content": text}
         }]
 
-    def search_notion_page_by_issue_number(self, issue_number: int) -> Optional[str]:
-        """Notion에서 이슈 번호로 페이지를 검색합니다"""
+    def search_notion_page_by_issue_number(self, issue_number: int, repository: str) -> Optional[str]:
+        """Notion에서 이슈 번호 + 레포지토리로 페이지를 검색합니다"""
         url = f"https://api.notion.com/v1/databases/{self.notion_database_id}/query"
         
+        # Issue Number AND Repository로 검색 (중복 방지)
         data = {
             "filter": {
-                "property": "Issue Number",
-                "number": {
-                    "equals": issue_number
-                }
+                "and": [
+                    {
+                        "property": "Issue Number",
+                        "number": {
+                            "equals": issue_number
+                        }
+                    },
+                    {
+                        "property": "Repository",
+                        "rich_text": {
+                            "equals": repository
+                        }
+                    }
+                ]
             }
         }
         
@@ -518,7 +529,7 @@ class GitHubNotionSync:
                 return results[0]["id"]
             return None
         except requests.exceptions.RequestException as e:
-            print(f"✗ Notion 검색 실패 (Issue #{issue_number}): {e}")
+            print(f"✗ Notion 검색 실패 ({repository} Issue #{issue_number}): {e}")
             return None
 
     def create_notion_page(self, issue: Dict) -> bool:
@@ -856,8 +867,8 @@ class GitHubNotionSync:
         failed_count = 0
         
         for issue in issues:
-            # Notion에 이미 존재하는지 확인
-            page_id = self.search_notion_page_by_issue_number(issue["number"])
+            # Notion에 이미 존재하는지 확인 (Issue Number + Repository)
+            page_id = self.search_notion_page_by_issue_number(issue["number"], self.repo)
             
             if page_id:
                 # 업데이트
@@ -925,12 +936,13 @@ def setup_github_token(config: Optional[Dict]) -> str:
     use_pat = config.get('use_personal_access_token', False) if config else False
     
     if use_pat:
+        # workflow에서 GITHUB_PAT: ${{ secrets.PAT_GITHUB }}로 설정됨
         token = os.environ.get('GITHUB_PAT')
         if token:
-            print("🔑 GITHUB_PAT 사용 (Organization 레포 접근 가능)")
+            print("🔑 PAT 사용 (여러 레포 + Projects 접근 가능)")
             return token
         else:
-            print("⚠ GITHUB_PAT가 설정되지 않았습니다. GITHUB_TOKEN 사용...")
+            print("⚠ PAT가 설정되지 않았습니다. GITHUB_TOKEN 사용...")
     
     # 기본: GITHUB_TOKEN 사용
     token = os.environ.get('GITHUB_TOKEN')
@@ -938,7 +950,7 @@ def setup_github_token(config: Optional[Dict]) -> str:
         print("🔑 GITHUB_TOKEN 사용 (기본)")
         return token
     
-    print("✗ GitHub Token이 없습니다 (GITHUB_TOKEN 또는 GITHUB_PAT 필요)")
+    print("✗ GitHub Token이 없습니다 (GITHUB_TOKEN 또는 PAT 필요)")
     sys.exit(1)
 
 
