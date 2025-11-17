@@ -117,6 +117,17 @@ class GitHubNotionSync:
                           }
                         }
                       }
+                      ... on ProjectV2ItemFieldDateValue {
+                        date {
+                          start
+                          end
+                        }
+                        field {
+                          ... on ProjectV2Field {
+                            name
+                          }
+                        }
+                      }
                     }
                   }
                 }
@@ -207,6 +218,13 @@ class GitHubNotionSync:
                     field_obj = field_value.get("field", {})
                     field_name = field_obj.get("name")
                     field_data = field_value.get("title")
+                
+                # Date (Start date, Target date, Due date 등)
+                elif "date" in field_value:
+                    field_obj = field_value.get("field", {})
+                    field_name = field_obj.get("name")
+                    date_value = field_value.get("date", {})
+                    field_data = date_value.get("start")  # start 날짜만 사용
                 
                 if field_name and field_data is not None:
                     project_info["fields"][field_name] = field_data
@@ -663,6 +681,17 @@ class GitHubNotionSync:
                         }
                     ]
                 }
+            
+            # Date 필드들 (Start date, Target date, Due date 등)
+            # Date 타입 필드는 자동으로 감지하여 추가
+            date_field_names = ["Start date", "Target date", "Due date", "Start Date", "Target Date", "Due Date"]
+            for date_field in date_field_names:
+                if date_field in fields:
+                    data["properties"][date_field] = {
+                        "date": {
+                            "start": fields[date_field]
+                        }
+                    }
         
         # 이슈 본문을 페이지 콘텐츠로 추가
         issue_body = issue.get("body", "")
@@ -801,6 +830,17 @@ class GitHubNotionSync:
                         }
                     ]
                 }
+            
+            # Date 필드들 (Start date, Target date, Due date 등)
+            # Date 타입 필드는 자동으로 감지하여 추가
+            date_field_names = ["Start date", "Target date", "Due date", "Start Date", "Target Date", "Due Date"]
+            for date_field in date_field_names:
+                if date_field in fields:
+                    data["properties"][date_field] = {
+                        "date": {
+                            "start": fields[date_field]
+                        }
+                    }
         
         try:
             # 1. 페이지 속성 업데이트
