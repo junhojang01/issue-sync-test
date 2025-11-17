@@ -55,20 +55,33 @@ class GitHubNotionSync:
             print(f"✗ GitHub API 호출 실패: {e}")
             sys.exit(1)
 
-    def get_issue_projects_info(self, issue_number: int) -> Dict[str, Any]:
-        """GraphQL로 이슈의 Projects V2 정보를 가져옵니다"""
-        owner, repo_name = self.repo.split('/')
+    def get_issue_projects_info(self, issue: Dict) -> Dict[str, Any]:
+        """GraphQL로 이슈의 Projects V2 정보를 가져옵니다 (모든 레벨 포함)"""
+        issue_number = issue['number']
+        node_id = issue.get('node_id')  # Issue의 global node ID
         
-        # GraphQL 쿼리
+        if not node_id:
+            print(f"  ⚠ Issue #{issue_number}: node_id 없음")
+            return {}
+        
+        # GraphQL 쿼리 - node_id를 사용하여 모든 레벨의 Projects 조회
         query = """
-        query($owner: String!, $repo: String!, $issueNumber: Int!) {
-          repository(owner: $owner, name: $repo) {
-            issue(number: $issueNumber) {
+        query($nodeId: ID!) {
+          node(id: $nodeId) {
+            ... on Issue {
               projectItems(first: 10) {
                 nodes {
                   project {
                     title
                     number
+                    owner {
+                      ... on User {
+                        login
+                      }
+                      ... on Organization {
+                        login
+                      }
+                    }
                   }
                   fieldValues(first: 20) {
                     nodes {
@@ -114,9 +127,7 @@ class GitHubNotionSync:
         """
         
         variables = {
-            "owner": owner,
-            "repo": repo_name,
-            "issueNumber": issue_number
+            "nodeId": node_id
         }
         
         try:
@@ -145,7 +156,8 @@ class GitHubNotionSync:
     def _parse_projects_data(self, data: Dict) -> Dict[str, Any]:
         """GraphQL 응답에서 프로젝트 정보를 파싱합니다"""
         try:
-            issue_data = data.get("data", {}).get("repository", {}).get("issue", {})
+            # node 쿼리 결과에서 직접 가져오기
+            issue_data = data.get("data", {}).get("node", {})
             project_items = issue_data.get("projectItems", {}).get("nodes", [])
             
             if not project_items:
@@ -153,9 +165,13 @@ class GitHubNotionSync:
             
             # 첫 번째 프로젝트 정보만 사용 (이슈가 여러 프로젝트에 속할 수 있지만 단순화)
             first_project = project_items[0]
+            project_data = first_project.get("project", {})
+            project_owner = project_data.get("owner", {}).get("login", "")
+            
             project_info = {
-                "project_title": first_project.get("project", {}).get("title", ""),
-                "project_number": first_project.get("project", {}).get("number", None),
+                "project_title": project_data.get("title", ""),
+                "project_number": project_data.get("number", None),
+                "project_owner": project_owner,
                 "fields": {}
             }
             
@@ -580,7 +596,7 @@ class GitHubNotionSync:
         }
         
         # Projects V2 정보 조회 및 추가
-        projects_info = self.get_issue_projects_info(issue["number"])
+        projects_info = self.get_issue_projects_info(issue)
         if projects_info:
             # Project 이름
             if projects_info.get("project_title"):
@@ -718,7 +734,7 @@ class GitHubNotionSync:
         }
         
         # Projects V2 정보 업데이트
-        projects_info = self.get_issue_projects_info(issue["number"])
+        projects_info = self.get_issue_projects_info(issue)
         if projects_info:
             # Project 이름
             if projects_info.get("project_title"):
