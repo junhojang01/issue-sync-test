@@ -1,38 +1,70 @@
 ---
-name: Bug report
-about: Create a report to help us improve
-title: ''
-labels: ''
+name: 🐛 버그 리포트
+about: 버그를 발견하셨나요? 자세히 알려주세요!
+title: '[BUG] '
+labels: 'bug'
 assignees: ''
 
 ---
 
-**Describe the bug**
-A clear and concise description of what the bug is.
+## 🐛 버그 설명
+<!-- 어떤 문제가 발생했나요? 구체적으로 설명해주세요. -->
 
-**To Reproduce**
-Steps to reproduce the behavior:
-1. Go to '...'
-2. Click on '....'
-3. Scroll down to '....'
-4. See error
 
-**Expected behavior**
-A clear and concise description of what you expected to happen.
+## 🔄 재현 방법
+<!-- 버그를 재현할 수 있는 단계를 알려주세요. -->
 
-**Screenshots**
-If applicable, add screenshots to help explain your problem.
+1. 
+2. 
+3. 
+4. 
 
-**Desktop (please complete the following information):**
- - OS: [e.g. iOS]
- - Browser [e.g. chrome, safari]
- - Version [e.g. 22]
 
-**Smartphone (please complete the following information):**
- - Device: [e.g. iPhone6]
- - OS: [e.g. iOS8.1]
- - Browser [e.g. stock browser, safari]
- - Version [e.g. 22]
+## ✅ 예상 동작
+<!-- 정상적으로 작동한다면 어떻게 되어야 하나요? -->
 
-**Additional context**
-Add any other context about the problem here.
+
+## ❌ 실제 동작
+<!-- 실제로는 어떻게 동작하나요? -->
+
+
+## 🚨 심각도
+<!-- 해당하는 것을 선택해주세요 (다른 것은 삭제) -->
+- [ ] 🔴 Critical - 서비스 사용 불가
+- [ ] 🟠 High - 주요 기능 동작 안 함
+- [ ] 🟡 Medium - 일부 기능에 문제
+- [ ] 🟢 Low - 사소한 문제
+
+
+## 📋 사용 환경
+<!-- 해당하는 환경 정보를 작성해주세요 -->
+
+**공통:**
+- OS: [예: macOS 14.0, Windows 11, Ubuntu 22.04]
+- 버전: [예: v1.2.3]
+
+**웹 애플리케이션인 경우:**
+- 브라우저: [예: Chrome 120, Safari 17, Firefox 121]
+
+**모바일 앱인 경우:**
+- 기기: [예: iPhone 15 Pro, Galaxy S23]
+- OS 버전: [예: iOS 17.2, Android 14]
+
+
+## 📸 스크린샷 / 로그
+<!-- 스크린샷이나 에러 로그가 있다면 첨부해주세요 -->
+
+```
+(여기에 에러 메시지나 로그를 붙여넣으세요)
+```
+
+
+## 📝 추가 정보
+<!-- 기타 도움이 될 만한 정보가 있나요? -->
+
+
+---
+
+### ✅ 체크리스트
+- [ ] 기존 이슈를 검색했고, 중복이 아닙니다
+- [ ] 최신 버전에서 문제가 발생합니다
