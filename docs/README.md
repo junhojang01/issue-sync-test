@@ -121,6 +121,19 @@ Organization의 많은 레포를 1번 설정으로 실시간 동기화하는 방
 
 ---
 
+### Step 10: Organization 공용 이슈 템플릿
+**[→ 10-organization-issue-templates.md](./10-organization-issue-templates.md)**
+
+Organization 전체에서 사용할 수 있는 공용 이슈 템플릿 설정 가이드입니다.
+- `.github` 레포지토리 생성
+- Form 템플릿 작성 (버그 리포트, 기능 제안, 질문 등)
+- Organization 전역 적용
+- 동기화 스크립트와 연계
+
+예상 소요 시간: **30-45분**
+
+---
+
 ## 📋 전체 진행 체크리스트
 
 ### Prerequisites (사전 준비)

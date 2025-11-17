@@ -15,6 +15,7 @@ GitHub Issues와 Notion 데이터베이스를 동기화하는 자동화 도구�
 5. **[여러 레포 동기화](./docs/05-multiple-repos.md)** - 중앙 수집 모드 (선택사항)
 6. **[Classic Token 가이드](./docs/06-classic-token-guide.md)** - PAT 생성 (여러 레포 + Projects)
 7. **[커스텀 필드 추가](./docs/07-custom-fields-guide.md)** - 필드 확장 (고급)
+8. **[Organization 공용 이슈 템플릿](./docs/10-organization-issue-templates.md)** - Organization 전역 템플릿 설정
 
 ⏱️ **기본 설정: 약 40-50분**  
 ⏱️ **여러 레포: +15-20분**  
@@ -245,7 +246,10 @@ python sync_issues.py
   - [ ] Notion Status 변경 → GitHub 이슈 닫기
 - [ ] 코멘트 동기화
 - [ ] 마일스톤 지원
-- [ ] 이슈 템플릿 지원
+- [x] **이슈 템플릿 지원** ✅ (완료!)
+  - [x] Organization 공용 템플릿 설정 가이드
+  - [x] 템플릿 정보 파싱 방법 문서화
+  - [ ] 자동 동기화 (다음 단계)
 
 ## 라이선스
 
