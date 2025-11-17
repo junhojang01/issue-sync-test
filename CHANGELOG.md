@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 ## [Unreleased]
 
+### Fixed
+- GraphQL Date 필드 에러 수정
+  - Projects V2의 Date 필드가 스칼라 타입인데 서브필드를 선택하려고 해서 발생한 오류 해결
+  - GraphQL 쿼리: `date { start end }` → `date` (스칼라 값으로 변경)
+  - 파싱 로직: `date_value.get("start")` → `field_value.get("date")` (직접 값 사용)
+  - 에러 메시지: "Selections can't be made on scalars" 해결
+
 ### Added
 - Organization 공용 이슈 템플릿 설정 가이드 추가 (`docs/10-organization-issue-templates.md`)
   - `.github` 레포지토리 생성 방법

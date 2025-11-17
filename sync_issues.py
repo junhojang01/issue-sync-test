@@ -118,10 +118,7 @@ class GitHubNotionSync:
                         }
                       }
                       ... on ProjectV2ItemFieldDateValue {
-                        date {
-                          start
-                          end
-                        }
+                        date
                         field {
                           ... on ProjectV2Field {
                             name
@@ -223,8 +220,7 @@ class GitHubNotionSync:
                 elif "date" in field_value:
                     field_obj = field_value.get("field", {})
                     field_name = field_obj.get("name")
-                    date_value = field_value.get("date", {})
-                    field_data = date_value.get("start")  # start 날짜만 사용
+                    field_data = field_value.get("date")  # date는 스칼라 값
                 
                 if field_name and field_data is not None:
                     project_info["fields"][field_name] = field_data
