@@ -2,6 +2,19 @@
 
 GitHub Issues와 Notion 데이터베이스를 동기화하는 자동화 도구입니다.
 
+## 📚 빠른 시작 가이드
+
+**[→ 전체 설정 가이드 보기 (docs/)](./docs/)**
+
+처음 시작하시나요? 단계별 가이드를 따라하세요:
+
+1. **[GitHub Projects 설정](./docs/01-projects-setup.md)** - Projects V2 생성 및 필드 설정
+2. **[Notion 설정](./docs/02-notion-setup.md)** - Integration 생성 및 데이터베이스 준비
+3. **[GitHub Secrets](./docs/03-github-secrets.md)** - API Key 및 권한 설정
+4. **[테스트 실행](./docs/04-testing.md)** - 동기화 테스트 및 확인
+
+⏱️ **전체 설정 시간: 약 40-50분**
+
 ## 기능
 
 - ✅ GitHub Issues → Notion 동기화
