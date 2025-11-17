@@ -81,6 +81,19 @@ Repository Secrets에 API Key를 안전하게 저장합니다.
 
 ---
 
+### Step 7: 커스텀 필드 추가 (고급)
+**[→ 07-custom-fields-guide.md](./07-custom-fields-guide.md)**
+
+GitHub Projects나 Notion에 커스텀 필드를 추가하는 방법입니다.
+- 필드 타입별 코드 예시
+- 복사-붙여넣기 템플릿
+- 실전 예시 (Team, Due Date 등)
+- 코드 수정 위치 안내
+
+예상 소요 시간: **15-30분** (필드당 5-10분)
+
+---
+
 ## 📋 전체 진행 체크리스트
 
 ### Prerequisites (사전 준비)

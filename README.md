@@ -14,10 +14,12 @@ GitHub Issues와 Notion 데이터베이스를 동기화하는 자동화 도구�
 4. **[테스트 실행](./docs/04-testing.md)** - 동기화 테스트 및 확인
 5. **[여러 레포 동기화](./docs/05-multiple-repos.md)** - 중앙 수집 모드 (선택사항)
 6. **[Classic Token 가이드](./docs/06-classic-token-guide.md)** - PAT 생성 (여러 레포 + Projects)
+7. **[커스텀 필드 추가](./docs/07-custom-fields-guide.md)** - 필드 확장 (고급)
 
-⏱️ **기본 설정 시간: 약 40-50분**  
-⏱️ **여러 레포 설정: +15-20분**  
-⏱️ **Classic Token: +10분**
+⏱️ **기본 설정: 약 40-50분**  
+⏱️ **여러 레포: +15-20분**  
+⏱️ **Classic Token: +10분**  
+⏱️ **커스텀 필드: +15-30분**
 
 ## 기능
 
