@@ -12,17 +12,23 @@ GitHub Issues와 Notion 데이터베이스를 동기화하는 자동화 도구�
 2. **[Notion 설정](./docs/02-notion-setup.md)** - Integration 생성 및 데이터베이스 준비
 3. **[GitHub Secrets](./docs/03-github-secrets.md)** - API Key 및 권한 설정
 4. **[테스트 실행](./docs/04-testing.md)** - 동기화 테스트 및 확인
+5. **[여러 레포 동기화](./docs/05-multiple-repos.md)** - 중앙 수집 모드 (선택사항)
 
-⏱️ **전체 설정 시간: 약 40-50분**
+⏱️ **기본 설정 시간: 약 40-50분**  
+⏱️ **여러 레포 설정: +15-20분**
 
 ## 기능
 
-- ✅ GitHub Issues → Notion 동기화
+- ✅ **GitHub Issues → Notion 동기화**
 - 📝 이슈 제목, 상태, 라벨, 본문 내용 모두 동기화
-- 🎨 Markdown 완전 지원: 헤딩, 코드 블록, 리스트, 체크박스, 인용구, 굵은 글씨 등
+- 🎨 **Markdown 완전 지원**: 헤딩, 코드 블록, 리스트, 체크박스, 인용구, 굵은 글씨 등
 - 🎯 **Projects V2 연동**: 프로젝트 정보 자동 동기화
   - 프로젝트 이름, Status (Backlog/Ready/In progress/In review/Done)
   - Priority, Story Points, Capacity, Sprint 등 모든 커스텀 필드
+- 🏢 **여러 레포 중앙 수집** (선택사항)
+  - config.yml로 레포 목록 관리
+  - 개인 레포 / Organization 레포 지원
+  - Repository 필드로 구분
 - 🔄 이슈 생성, 수정, 닫기 시 자동 동기화
 - ⏰ 주기적 자동 동기화 (매 시간)
 - 🎯 수동 실행 가능
@@ -145,13 +151,16 @@ python sync_issues.py
   - [x] GraphQL API로 프로젝트 정보 조회
   - [x] Status, Priority, Story Points, Capacity 등 동기화
   - [x] 모든 커스텀 필드 자동 감지
-- [ ] **여러 레포 동기화** (다음 목표)
-  - [ ] config.yml로 레포 목록 관리
-  - [ ] 중앙 집중식 동기화
-  - [ ] Organization 레포 지원
-- [ ] Notion → GitHub 양방향 동기화
+- [x] **여러 레포 동기화** ✅ (완료!)
+  - [x] config.yml로 레포 목록 관리
+  - [x] 중앙 집중식 동기화
+  - [x] Organization 레포 지원 (PAT)
+- [ ] **양방향 동기화** (다음 목표)
+  - [ ] Notion → GitHub 이슈 생성
+  - [ ] Notion Status 변경 → GitHub 이슈 닫기
 - [ ] 코멘트 동기화
 - [ ] 마일스톤 지원
+- [ ] 이슈 템플릿 지원
 
 ## 라이선스
 

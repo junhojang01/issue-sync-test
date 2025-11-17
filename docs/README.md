@@ -56,6 +56,18 @@ Repository Secrets에 API Key를 안전하게 저장합니다.
 
 ---
 
+### Step 5: 여러 레포 동기화 (선택사항)
+**[→ 05-multiple-repos.md](./05-multiple-repos.md)**
+
+여러 레포의 이슈를 한 곳에서 중앙 관리합니다.
+- config.yml 설정
+- Organization PAT 설정
+- 중앙 수집 모드
+
+예상 소요 시간: **15분** (Organization은 20분)
+
+---
+
 ## 📋 전체 진행 체크리스트
 
 ### Prerequisites (사전 준비)

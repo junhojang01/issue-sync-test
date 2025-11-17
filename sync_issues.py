@@ -7,9 +7,11 @@ import os
 import sys
 import re
 import json
+import yaml
 import requests
 from datetime import datetime
 from typing import List, Dict, Optional, Any
+from pathlib import Path
 
 
 class GitHubNotionSync:
@@ -866,15 +868,73 @@ class GitHubNotionSync:
         print("=" * 60)
 
 
+def load_config() -> Optional[Dict]:
+    """config.yml 파일을 로드합니다 (선택사항)"""
+    config_path = Path(__file__).parent / 'config.yml'
+    
+    if not config_path.exists():
+        return None
+    
+    try:
+        with open(config_path, 'r', encoding='utf-8') as f:
+            config = yaml.safe_load(f)
+        return config
+    except Exception as e:
+        print(f"⚠ config.yml 로드 실패: {e}")
+        print("기본 모드(현재 레포만)로 계속합니다...")
+        return None
+
+
+def get_repositories_to_sync(config: Optional[Dict]) -> List[str]:
+    """동기화할 레포 목록을 반환합니다"""
+    if config and 'repositories' in config and config['repositories']:
+        repos = config['repositories']
+        print(f"📋 config.yml에서 {len(repos)}개 레포를 찾았습니다.")
+        return repos
+    
+    # config가 없으면 현재 레포만
+    current_repo = os.environ.get('GITHUB_REPOSITORY')
+    if not current_repo:
+        print("✗ GITHUB_REPOSITORY 환경 변수가 설정되지 않았습니다.")
+        print("  config.yml이 없으면 GITHUB_REPOSITORY가 필요합니다.")
+        sys.exit(1)
+    
+    print(f"📋 현재 레포만 동기화: {current_repo}")
+    return [current_repo]
+
+
+def setup_github_token(config: Optional[Dict]) -> str:
+    """GitHub Token을 설정합니다"""
+    # config에서 PAT 사용 여부 확인
+    use_pat = config.get('use_personal_access_token', False) if config else False
+    
+    if use_pat:
+        token = os.environ.get('GITHUB_PAT')
+        if token:
+            print("🔑 GITHUB_PAT 사용 (Organization 레포 접근 가능)")
+            return token
+        else:
+            print("⚠ GITHUB_PAT가 설정되지 않았습니다. GITHUB_TOKEN 사용...")
+    
+    # 기본: GITHUB_TOKEN 사용
+    token = os.environ.get('GITHUB_TOKEN')
+    if token:
+        print("🔑 GITHUB_TOKEN 사용 (기본)")
+        return token
+    
+    print("✗ GitHub Token이 없습니다 (GITHUB_TOKEN 또는 GITHUB_PAT 필요)")
+    sys.exit(1)
+
+
 def main():
-    # 환경 변수 확인
-    repo = os.environ.get('GITHUB_REPOSITORY')
+    print("=" * 70)
+    print("GitHub Issues → Notion 동기화 시작")
+    print("=" * 70)
+    print()
+    
+    # 1. 필수 환경 변수 확인
     notion_api_key = os.environ.get('NOTION_API_KEY')
     notion_database_id = os.environ.get('NOTION_DATABASE_ID')
-    
-    if not repo:
-        print("✗ GITHUB_REPOSITORY 환경 변수가 설정되지 않았습니다.")
-        sys.exit(1)
     
     if not notion_api_key:
         print("✗ NOTION_API_KEY 환경 변수가 설정되지 않았습니다.")
@@ -884,9 +944,62 @@ def main():
         print("✗ NOTION_DATABASE_ID 환경 변수가 설정되지 않았습니다.")
         sys.exit(1)
     
-    # 동기화 실행
-    syncer = GitHubNotionSync(repo, notion_api_key, notion_database_id)
-    syncer.sync()
+    # 2. config.yml 로드 (선택사항)
+    print("⚙️  설정 로드 중...")
+    config = load_config()
+    
+    if config:
+        print("✓ config.yml 발견!")
+    else:
+        print("ℹ️  config.yml 없음 - 기본 모드(현재 레포만)")
+    print()
+    
+    # 3. GitHub Token 설정
+    github_token = setup_github_token(config)
+    os.environ['GITHUB_TOKEN'] = github_token  # 전역 설정
+    
+    # 4. 동기화할 레포 목록
+    repositories = get_repositories_to_sync(config)
+    print()
+    
+    # 5. 각 레포 동기화
+    total_created = 0
+    total_updated = 0
+    total_failed = 0
+    total_issues = 0
+    
+    for idx, repo in enumerate(repositories, 1):
+        print("=" * 70)
+        print(f"[{idx}/{len(repositories)}] 레포: {repo}")
+        print("=" * 70)
+        
+        try:
+            # GitHubNotionSync 인스턴스 생성
+            syncer = GitHubNotionSync(repo, notion_api_key, notion_database_id)
+            
+            # 동기화 실행
+            syncer.sync()
+            
+            # 통계 수집 (간단하게 sync 메서드에서 반환하도록 수정 가능)
+            # 지금은 각 레포마다 출력만 함
+            
+        except Exception as e:
+            print(f"✗ 레포 {repo} 동기화 실패: {e}")
+            import traceback
+            traceback.print_exc()
+            continue
+        
+        print()
+    
+    # 6. 전체 요약
+    print()
+    print("=" * 70)
+    print("🎉 전체 동기화 완료!")
+    print("=" * 70)
+    print(f"동기화한 레포: {len(repositories)}개")
+    for repo in repositories:
+        print(f"  - {repo}")
+    print("=" * 70)
 
 
 if __name__ == "__main__":
