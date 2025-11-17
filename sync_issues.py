@@ -6,9 +6,10 @@ GitHub Issues를 Notion 데이터베이스로 동기화하는 스크립트
 import os
 import sys
 import re
+import json
 import requests
 from datetime import datetime
-from typing import List, Dict, Optional
+from typing import List, Dict, Optional, Any
 
 
 class GitHubNotionSync:
@@ -51,6 +52,152 @@ class GitHubNotionSync:
         except requests.exceptions.RequestException as e:
             print(f"✗ GitHub API 호출 실패: {e}")
             sys.exit(1)
+
+    def get_issue_projects_info(self, issue_number: int) -> Dict[str, Any]:
+        """GraphQL로 이슈의 Projects V2 정보를 가져옵니다"""
+        owner, repo_name = self.repo.split('/')
+        
+        # GraphQL 쿼리
+        query = """
+        query($owner: String!, $repo: String!, $issueNumber: Int!) {
+          repository(owner: $owner, name: $repo) {
+            issue(number: $issueNumber) {
+              projectItems(first: 10) {
+                nodes {
+                  project {
+                    title
+                    number
+                  }
+                  fieldValues(first: 20) {
+                    nodes {
+                      ... on ProjectV2ItemFieldSingleSelectValue {
+                        name
+                        field {
+                          ... on ProjectV2SingleSelectField {
+                            name
+                          }
+                        }
+                      }
+                      ... on ProjectV2ItemFieldNumberValue {
+                        number
+                        field {
+                          ... on ProjectV2Field {
+                            name
+                          }
+                        }
+                      }
+                      ... on ProjectV2ItemFieldTextValue {
+                        text
+                        field {
+                          ... on ProjectV2Field {
+                            name
+                          }
+                        }
+                      }
+                      ... on ProjectV2ItemFieldIterationValue {
+                        title
+                        field {
+                          ... on ProjectV2IterationField {
+                            name
+                          }
+                        }
+                      }
+                    }
+                  }
+                }
+              }
+            }
+          }
+        }
+        """
+        
+        variables = {
+            "owner": owner,
+            "repo": repo_name,
+            "issueNumber": issue_number
+        }
+        
+        try:
+            response = requests.post(
+                "https://api.github.com/graphql",
+                headers={
+                    "Authorization": f"Bearer {self.github_token}",
+                    "Content-Type": "application/json"
+                },
+                json={"query": query, "variables": variables}
+            )
+            response.raise_for_status()
+            data = response.json()
+            
+            if "errors" in data:
+                print(f"  ⚠ GraphQL 에러 (Issue #{issue_number}): {data['errors']}")
+                return {}
+            
+            # 프로젝트 정보 파싱
+            return self._parse_projects_data(data)
+            
+        except requests.exceptions.RequestException as e:
+            print(f"  ⚠ Projects 정보 조회 실패 (Issue #{issue_number}): {e}")
+            return {}
+
+    def _parse_projects_data(self, data: Dict) -> Dict[str, Any]:
+        """GraphQL 응답에서 프로젝트 정보를 파싱합니다"""
+        try:
+            issue_data = data.get("data", {}).get("repository", {}).get("issue", {})
+            project_items = issue_data.get("projectItems", {}).get("nodes", [])
+            
+            if not project_items:
+                return {}
+            
+            # 첫 번째 프로젝트 정보만 사용 (이슈가 여러 프로젝트에 속할 수 있지만 단순화)
+            first_project = project_items[0]
+            project_info = {
+                "project_title": first_project.get("project", {}).get("title", ""),
+                "project_number": first_project.get("project", {}).get("number", None),
+                "fields": {}
+            }
+            
+            # 필드 값들 파싱
+            field_values = first_project.get("fieldValues", {}).get("nodes", [])
+            for field_value in field_values:
+                if not field_value:
+                    continue
+                
+                field_name = None
+                field_data = None
+                
+                # Single Select (Status, Priority 등)
+                if "field" in field_value and "name" in field_value:
+                    field_obj = field_value.get("field", {})
+                    field_name = field_obj.get("name")
+                    field_data = field_value.get("name")
+                
+                # Number (Story Points, Capacity 등)
+                elif "number" in field_value:
+                    field_obj = field_value.get("field", {})
+                    field_name = field_obj.get("name")
+                    field_data = field_value.get("number")
+                
+                # Text
+                elif "text" in field_value:
+                    field_obj = field_value.get("field", {})
+                    field_name = field_obj.get("name")
+                    field_data = field_value.get("text")
+                
+                # Iteration (Sprint)
+                elif "title" in field_value:
+                    field_obj = field_value.get("field", {})
+                    field_name = field_obj.get("name")
+                    field_data = field_value.get("title")
+                
+                if field_name and field_data is not None:
+                    project_info["fields"][field_name] = field_data
+            
+            return project_info
+            
+        except (KeyError, TypeError, AttributeError) as e:
+            print(f"  ⚠ Projects 데이터 파싱 실패: {e}")
+            return {}
 
     def convert_body_to_blocks(self, body: str) -> List[Dict]:
         """이슈 본문(Markdown)을 Notion 블록으로 변환합니다"""
@@ -419,6 +566,75 @@ class GitHubNotionSync:
                 ]
             }
         
+        # Repository 추가 (여러 레포 지원 시 유용)
+        data["properties"]["Repository"] = {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": self.repo
+                    }
+                }
+            ]
+        }
+        
+        # Projects V2 정보 조회 및 추가
+        projects_info = self.get_issue_projects_info(issue["number"])
+        if projects_info:
+            # Project 이름
+            if projects_info.get("project_title"):
+                data["properties"]["Project"] = {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": projects_info["project_title"]
+                            }
+                        }
+                    ]
+                }
+            
+            # Projects 필드들
+            fields = projects_info.get("fields", {})
+            
+            # Status (Backlog, Ready, In progress, In review, Done)
+            if "Status" in fields:
+                data["properties"]["Project Status"] = {
+                    "select": {
+                        "name": fields["Status"]
+                    }
+                }
+            
+            # Priority
+            if "Priority" in fields:
+                data["properties"]["Priority"] = {
+                    "select": {
+                        "name": fields["Priority"]
+                    }
+                }
+            
+            # Story Points (Number)
+            if "Story Points" in fields:
+                data["properties"]["Story Points"] = {
+                    "number": fields["Story Points"]
+                }
+            
+            # Capacity (Number)
+            if "Capacity" in fields:
+                data["properties"]["Capacity"] = {
+                    "number": fields["Capacity"]
+                }
+            
+            # Sprint (Iteration)
+            if "Sprint" in fields:
+                data["properties"]["Sprint"] = {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": str(fields["Sprint"])
+                            }
+                        }
+                    ]
+                }
+        
         # 이슈 본문을 페이지 콘텐츠로 추가
         issue_body = issue.get("body", "")
         data["children"] = self.convert_body_to_blocks(issue_body)
@@ -487,6 +703,75 @@ class GitHubNotionSync:
                     }
                 ]
             }
+        
+        # Repository 업데이트
+        data["properties"]["Repository"] = {
+            "rich_text": [
+                {
+                    "text": {
+                        "content": self.repo
+                    }
+                }
+            ]
+        }
+        
+        # Projects V2 정보 업데이트
+        projects_info = self.get_issue_projects_info(issue["number"])
+        if projects_info:
+            # Project 이름
+            if projects_info.get("project_title"):
+                data["properties"]["Project"] = {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": projects_info["project_title"]
+                            }
+                        }
+                    ]
+                }
+            
+            # Projects 필드들
+            fields = projects_info.get("fields", {})
+            
+            # Status (Backlog, Ready, In progress, In review, Done)
+            if "Status" in fields:
+                data["properties"]["Project Status"] = {
+                    "select": {
+                        "name": fields["Status"]
+                    }
+                }
+            
+            # Priority
+            if "Priority" in fields:
+                data["properties"]["Priority"] = {
+                    "select": {
+                        "name": fields["Priority"]
+                    }
+                }
+            
+            # Story Points (Number)
+            if "Story Points" in fields:
+                data["properties"]["Story Points"] = {
+                    "number": fields["Story Points"]
+                }
+            
+            # Capacity (Number)
+            if "Capacity" in fields:
+                data["properties"]["Capacity"] = {
+                    "number": fields["Capacity"]
+                }
+            
+            # Sprint (Iteration)
+            if "Sprint" in fields:
+                data["properties"]["Sprint"] = {
+                    "rich_text": [
+                        {
+                            "text": {
+                                "content": str(fields["Sprint"])
+                            }
+                        }
+                    ]
+                }
         
         try:
             # 1. 페이지 속성 업데이트

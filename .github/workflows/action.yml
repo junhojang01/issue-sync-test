@@ -3,6 +3,7 @@ name: "GitHub Notion Issues Sync"
 permissions:
     issues: read
     contents: read
+    repository-projects: read  # Projects V2 정보 읽기
 
 # 이슈가 생성, 수정, 삭제될 때 또는 수동으로 실행
 on: 

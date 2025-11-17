@@ -211,9 +211,9 @@ Options:
 2. 속성 이름: `Project Status`
 3. Options 추가 (GitHub Projects의 Status와 동일하게):
    - `Backlog`
-   - `StandBy`
-   - `Todo`
-   - `In Progress`
+   - `Ready`
+   - `In progress`
+   - `In review`
    - `Done`
 
 #### 🔟 Priority
