@@ -15,8 +15,6 @@ repositories:
   # 개인 레포 예시
   - junhojang01/issue-sync-test
   - junhojang01/deeplink-test
-  - junhojang01/mac-recording-app
-  - junhojang01/electron-recording-app
   # - jangjunho/my-project
   # - jangjunho/another-project
   
